@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %} Edit Post {% endblock %}
+
+{% block content %} 
+
+<h2>Edit Post</h2>
+  
+<form method="POST">
+<p>Title</p> <input name="title" id="title">
+<p>Content</p> <textarea rows="13" cols="20" name="content"></textarea>
+
+<p><a href="/users">Cancel</a></p>
+<button type="submit">Edit</button>
+</form>
+
+{% endblock %}
+

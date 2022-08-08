@@ -1,6 +1,6 @@
 from unittest import TestCase
 from app import app
-from models import User, db
+from models import User, db, Post
 
 
 # Use test database and don't clutter tests with SQL
@@ -39,6 +39,19 @@ class BloglyTests(TestCase):
         with app.test_client() as client:
             resp = client.get("/", follow_redirects=True)
             self.assertEqual(resp.status_code, 200)
+
+class PostTests(TestCase):
+    def setUp(self):
+        app.config["TESTING"] = True
+        User.query.delete()
+ 
+    
+    def tearDown(self):
+        db.session.rollback()
+
+    def test_posts(self):
+        post = Post(title="My first blog post", content="this article is going to go viral!")
+        self.assertEqual(post.title,"My first blog post")
 
 
 

@@ -1,6 +1,6 @@
 from unittest import TestCase
 from app import app
-from models import User, db
+from models import User, db, Post
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///blogly_test'
 app.config['SQLALCHEMY_ECHO'] = False
@@ -64,3 +64,25 @@ class UsersTestCase(TestCase):
                 self.assertIn('<ul>\n    \n  </ul>', html)
 
 
+
+class PostsTestCase(TestCase):
+    def setUp(self):
+        Post.query.delete()
+
+        post = Post(title="My first blog post", content="this article is going to go viral!")
+        db.session.add(post)
+        db.session.commit()
+
+        self.post_id = post.id
+        
+    def tearDown(self):
+        db.session.rollback()
+
+    """test if new post page shows up correctly"""
+    def test_new_post(self):
+            with app.test_client() as client:
+                res = client.get('/posts/1')
+                html = res.get_data(as_text=True)
+                self.assertIn('<h2>My first blog post </h2>',html)
+
+    

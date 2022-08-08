@@ -1,7 +1,7 @@
 """Blogly application."""
 
-from flask import Flask, request,render_template, redirect, flash, session
-from models import db, connect_db, User
+from flask import Flask, request,render_template, redirect, flash
+from models import db, connect_db, User, Post, get_user_info
 from flask_debugtoolbar import DebugToolbarExtension
 
 
@@ -42,7 +42,7 @@ def new_user_post():
     # return redirect(f'/users/{new_user.id}')
 
 @app.route('/users/<int:user_id>')
-def show_user(user_id):
+def show_user(user_id,):
     user = User.query.get_or_404(user_id)
     return render_template('users/show.html', user = user)
 
@@ -63,7 +63,6 @@ def edited_user(user_id):
 
     return redirect("/users")
 
-
 @app.route('/users/<int:user_id>/delete')
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -73,16 +72,60 @@ def delete_user(user_id):
 
     return redirect('/users')
     
+@app.route('/users/<int:user_id>/posts/new')
+def post_user(user_id):
+    """what happens when you click add post"""
+    user = User.query.get_or_404(user_id)
+    return render_template("posts/new.html", user=user)
+
+@app.route('/users/<int:user_id>/posts/new',methods=['POST'])
+def add_post(user_id):
+    """what happens after you submit post"""
+    user = User.query.get_or_404(user_id)
+
+    new_post = Post(title = request.form['title'],content = request.form['content'],user=user)
+
+    db.session.add(new_post)
+    db.session.commit()
+
+    return redirect(f"/users/{user_id}")
+
+@app.route('/posts/<int:post_id>')
+def post_detail(post_id):
+    """what happens when you click add post"""
+    post = Post.query.get_or_404(post_id)
+    return render_template("posts/show.html", post=post)
+
+
+@app.route('/posts/<int:post_id>/edit', methods=['GET'])
+def edit_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('/posts/edit.html', post=post)
 
 
 
-# Show the edit page for a user.
+@app.route('/posts/<int:post_id>/edit', methods=['POST'])
+def edited_post(post_id):
+    """takes care of the part where you edit a post"""
+    post = Post.query.get_or_404(post_id)
+    post.title = request.form["title"],
+    post.content = request.form["content"]
 
-# Have a cancel button that returns to the detail page for a user, and a save button that updates the user.
+    db.session.add(post)
+    db.session.commit()
+
+    return redirect(f"/users/{post.user_id}")
 
 
+@app.route('/posts/<int:post_id>/delete',methods=['POST'])
+def delete_post(post_id):
+    '''deleting a post'''
+    post = Post.query.get_or_404(post_id)
 
+    db.session.delete(post)
+    db.session.commit()
 
+    return redirect(f'/users/{post.user_id}')
 # below code directly run sql on python but uncommon to do this way 
 # movies = db.session.execute("SELECT * FROM database")
 # list(movies)
