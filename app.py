@@ -1,7 +1,7 @@
 """Blogly application."""
 
 from flask import Flask, request,render_template, redirect, flash
-from models import db, connect_db, User, Post, get_user_info
+from models import db, connect_db, User, Post, Tag, PostTag
 from flask_debugtoolbar import DebugToolbarExtension
 
 
@@ -73,17 +73,21 @@ def delete_user(user_id):
     return redirect('/users')
     
 @app.route('/users/<int:user_id>/posts/new')
-def post_user(user_id):
+def post_page(user_id):
     """what happens when you click add post"""
     user = User.query.get_or_404(user_id)
-    return render_template("posts/new.html", user=user)
+    tags = Tag.query.all()
+    return render_template("posts/new.html", user=user, tags=tags)
 
-@app.route('/users/<int:user_id>/posts/new',methods=['POST'])
+@app.route('/users/<int:user_id>/posts/new', methods=['POST'])
 def add_post(user_id):
     """what happens after you submit post"""
     user = User.query.get_or_404(user_id)
 
-    new_post = Post(title = request.form['title'],content = request.form['content'],user=user)
+    tag_ids = [int(num) for num in request.form.getlist('tags')]
+    tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
+
+    new_post = Post(title = request.form['title'],content = request.form['content'],user=user, tags=tags)
 
     db.session.add(new_post)
     db.session.commit()
@@ -100,13 +104,17 @@ def post_detail(post_id):
 @app.route('/posts/<int:post_id>/edit', methods=['GET'])
 def edit_post(post_id):
     post = Post.query.get_or_404(post_id)
-    return render_template('/posts/edit.html', post=post)
+    tags = Tag.query.all()
+    return render_template('/posts/edit.html', post=post, tags=tags)
 
 
 
 @app.route('/posts/<int:post_id>/edit', methods=['POST'])
 def edited_post(post_id):
     """takes care of the part where you edit a post"""
+    tag_ids = [int(num) for num in request.form.getlist('tags')]
+    post.tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
+
     post = Post.query.get_or_404(post_id)
     post.title = request.form["title"],
     post.content = request.form["content"]
@@ -126,6 +134,73 @@ def delete_post(post_id):
     db.session.commit()
 
     return redirect(f'/users/{post.user_id}')
+
+
+@app.route('/tags')
+def list_tag():
+    '''Lists all tags, with links to the tag detail page'''
+    tags = Tag.query.all()
+    return render_template('/tags/list.html', tags=tags)
+
+
+@app.route('/tags/<int:tag_id>/show')
+def show_tags(tag_id):
+    '''Show detail about a tag. Have links to edit form and to delete.'''
+    tag = Tag.query.get_or_404(tag_id)
+
+    return render_template('/tags/show.html', tag=tag)
+
+
+@app.route('/tags/new')
+def add_tag():
+    '''Shows a form to add a new tag.'''
+    posts = Post.query.all()
+
+    return render_template('/tags/new.html', posts=posts)
+
+@app.route('/tags/new', methods=['POST'])
+def submit_tag():
+    '''Process add form, adds tag, and redirect to tag list.'''
+    post_ids = [int(num) for num in request.form.getlist("posts")]
+    posts = Post.query.filter(Post.id.in_(post_ids)).all()
+    tag = Tag(name=request.form["tag"], posts=posts)
+
+    db.session.add(tag)
+    db.session.commit()
+
+    return redirect('/tags')
+
+@app.route('/tags/<int:tag_id>/edit')
+def edit_tag(tag_id):
+    '''Show edit form for a tag'''
+    tag = Tag.query.get_or_404(tag_id)
+    posts = Post.query.all()
+
+    return render_template('/tags/edit.html',tag=tag, posts=posts)
+
+@app.route('/tags/<int:tag_id>/edit', methods=['POST'])
+def edit_submit(tag_id):
+    '''Process edit form, edit tag, and redirects to the tags list'''
+    tag = Tag.query.get_or_404(tag_id)
+    tag.name= request.form['tag']
+    post_ids = [int(num) for num in request.form.getlist("posts")]
+    tag.posts = Post.query.filter(Post.id.in_(post_ids)).all()
+
+    db.session.add(tag)
+    db.session.commit()
+
+    return redirect('/tags')
+
+@app.route('/tags/<int:tag_id>/delete', methods=['POST'])
+def delete_tag(tag_id):
+    '''delete tag'''
+    tag = Tag.query.get_or_404(tag_id)
+    db.session.delete(tag)
+    db.session.commit()
+
+    return redirect('/tags')
+
+
 # below code directly run sql on python but uncommon to do this way 
 # movies = db.session.execute("SELECT * FROM database")
 # list(movies)

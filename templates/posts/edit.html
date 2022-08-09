@@ -10,8 +10,13 @@
 <p>Title</p> <input name="title" id="title">
 <p>Content</p> <textarea rows="13" cols="20" name="content"></textarea>
 
-<p><a href="/users">Cancel</a></p>
-<button type="submit">Edit</button>
+<p><b>Tags</b></p>
+{% for tag in tags %}
+<input type="checkbox" name="tags">{{tag.name}}
+{% endfor %}
+
+<p><a href="/users">Cancel</a>
+<button type="submit">Edit</button></p>
 </form>
 
 {% endblock %}

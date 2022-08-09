@@ -34,13 +34,13 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.now().strftime("%Y-%m-%d %H:%M")) 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
 
-def get_user_info():
-    all_fnames = User.query.all()
-    for name in all_fnames:
-        # if name.posts is not None:
-        #     print(name.first_name, name.title)
-        # else:
-        print(name.first_name, name.last_name, name.image_url)
+    def get_user_info():
+        all_fnames = User.query.all()
+        for name in all_fnames:
+            # if name.posts is not None:
+            #     print(name.first_name, name.title)
+            # else:
+            print(name.first_name, name.last_name, name.image_url)
 
 
     # on iPython db.create_all()
@@ -50,6 +50,31 @@ def get_user_info():
         x = self
         return f"<Post id={x.id} post_title={x.title} post_content={x.content}>"
 
+class Tag(db.Model):
+    __tablename__ = "tags"
+    id = db.Column(db.Integer, primary_key=True)  
+    name = db.Column(db.Text, unique=True, nullable=False)
+
+    posts = db.relationship('Post',backref='tags', secondary="posts_tags")
+
+
+class PostTag(db.Model):
+    __tablename__ = 'posts_tags'
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), primary_key=True)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'), primary_key=True)
+
+    # def post_tag_join():
+    #     post_tag = (db.session.query(Post,Tag).join(Post).all)
+
+    #     for post, tag in post_tag:
+    #         print(post.id, tag.id)
+        
+
+
 def connect_db(app):
     db.app = app
     db.init_app(app)
+
+
+
+

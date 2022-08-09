@@ -7,11 +7,22 @@
 <h2>Add Post for {{user.full_name}}</h2>
   
 <form method="POST">
-<p>Title</p> <input name="title" id="title">
-<p>Content</p> <textarea rows="13" cols="20" name="content"></textarea>
 
-<p><a href="/users">Cancel</a></p>
-<button type="submit">Add</button>
+<p>Title</p> <input name="title" id="title">
+<p>Content</p> <textarea rows="13" cols="20" name="content"></textarea><br>
+
+
+<p><b>Tags</b></p>
+
+{% for tag in tags %}
+<input type="checkbox" name="tags" value="{{ tag.id }}">{{tag.name}}
+{% endfor %}
+
+
+
+<p><a href="/users">Cancel</a>
+<button type="submit">Add</button></p>
+
 </form>
 
 {% endblock %}
